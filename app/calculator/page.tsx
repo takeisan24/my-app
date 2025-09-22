@@ -11,6 +11,12 @@ export default function Calculator() {
   const [operation, setOperation] = useState<string | null>(null);
   const [waitingForOperand, setWaitingForOperand] = useState(false);
 
+  // 🆕 Thêm state cho memory
+  const [memory, setMemory] = useState(0);
+  const [hasMemory, setHasMemory] = useState(false);
+
+  const [history, setHistory] = useState<string[]>([]);
+
   const inputNumber = (num: string) => {
     if (waitingForOperand) {
       setDisplay(num);
@@ -56,22 +62,41 @@ export default function Calculator() {
   const calculate = (firstValue: string, secondValue: string, operation: string) => {
     const prev = parseFloat(firstValue);
     const current = parseFloat(secondValue);
+    let result: number;
 
     switch (operation) {
       case "+":
-        return prev + current;
+        result = prev + current;
+        break;
       case "-":
-        return prev - current;
+        result = prev - current;
+        break;
       case "×":
-        return prev * current;
+        result = prev * current;
+        break;
       case "÷":
-        return prev / current;
+        result = prev / current;
+        break;
       case "=":
-        return current;
+        result = current;
+        break;
       default:
-        return current;
+        result = current;
     }
+
+    if (operation !== "="){
+      const historyEntry = `${prev} ${operation} ${current} = ${result}`;
+      setHistory(prev => [historyEntry, ...prev].slice(0, 5)); // Giới hạn lịch sử tối đa 10 mục
+    }
+
+    return result;
   };
+
+  
+
+  const clearHistory = () => {
+    setHistory([]);
+  }
 
   const handleOperation = (op: string) => {
     if (op === "=") {
@@ -84,6 +109,30 @@ export default function Calculator() {
       }
     } else {
       performOperation(op);
+    }
+  };
+
+  // 🆕 Thêm hàm xử lý memory operations
+  const handleMemoryOperation = (op: string) => {
+    const currentValue = parseFloat(display) || 0;
+    
+    switch (op) {
+      case "MC": // Memory Clear
+        setMemory(0);
+        setHasMemory(false);
+        break;
+      case "MR": // Memory Recall
+        setDisplay(String(memory));
+        setWaitingForOperand(true);
+        break;
+      case "M+": // Memory Add
+        setMemory(memory + currentValue);
+        setHasMemory(true);
+        break;
+      case "M-": // Memory Subtract
+        setMemory(memory - currentValue);
+        setHasMemory(true);
+        break;
     }
   };
 
@@ -218,10 +267,43 @@ export default function Calculator() {
 
         {/* History */}
         <Card variant="glass" className="mt-6">
-          <div className="text-center">
-            <div className="text-gray-400 text-sm mb-2">📊 Lịch sử tính toán</div>
-            <div className="text-gray-500 text-xs">Chức năng sẽ được bổ sung...</div>
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mb-2">
+              <span>📊 Lịch sử tính toán</span>
+              {history.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearHistory}
+                  className="text-xs text-red-400 hover:bg-red-500/20"
+                >
+                  Xóa
+                </Button>
+              )}
+            </div>
           </div>
+          
+          {history.length === 0 ? (
+            <div className="text-gray-500 text-xs text-center py-4">
+              Chưa có phép tính nào...
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {history.map((entry, index) => (
+                <div 
+                  key={index}
+                  className="text-xs text-gray-300 bg-white/5 rounded-lg p-2 font-mono text-center hover:bg-white/10 transition-colors cursor-pointer"
+                  onClick={() => {
+                    const result = entry.split(' = ')[1];
+                    setDisplay(result);
+                    setWaitingForOperand(true);
+                  }}
+                >
+                  {entry}
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
     </div>
