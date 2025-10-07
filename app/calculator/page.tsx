@@ -26,6 +26,29 @@ export default function Calculator() {
     }
   };
 
+  const handleMemoryOpoeration = (op: string) => {
+    const currentValue = parseFloat(display) || 0;
+    
+    switch (op) {
+      case "MC": // Memory Clear
+        setMemory(0);
+        setHasMemory(false);
+        break;
+      case "MR": // Memory Recall
+        setDisplay(String(memory));
+        setWaitingForOperand(true);
+        break;
+      case "M+": // Memory Add
+        setMemory(memory + currentValue);
+        setHasMemory(true);
+        break;
+      case "M-": // Memory Subtract
+        setMemory(memory - currentValue);
+        setHasMemory(true);
+        break;
+    }
+  };
+
   const inputDot = () => {
     if (waitingForOperand) {
       setDisplay("0.");
@@ -245,20 +268,45 @@ export default function Calculator() {
 
           {/* Memory Functions */}
           <div className="mt-6 pt-6 border-t border-white/10">
-            <div className="text-center text-gray-400 text-sm mb-3">
-              Chức năng bổ sung
+            <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mb-3">
+              <span>🧠 Memory</span>
+              {hasMemory && (
+                <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs">
+                  {memory}
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-4 gap-2">
-              <Button variant="outline" size="sm" className="text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs hover:bg-red-500/20 hover:text-red-400"
+                onClick={() => handleMemoryOperation("MC")}
+              >
                 MC
               </Button>
-              <Button variant="outline" size="sm" className="text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs hover:bg-blue-500/20 hover:text-blue-400"
+                onClick={() => handleMemoryOperation("MR")}
+              >
                 MR
               </Button>
-              <Button variant="outline" size="sm" className="text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs hover:bg-green-500/20 hover:text-green-400"
+                onClick={() => handleMemoryOperation("M+")}
+              >
                 M+
               </Button>
-              <Button variant="outline" size="sm" className="text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs hover:bg-yellow-500/20 hover:text-yellow-400"
+                onClick={() => handleMemoryOperation("M-")}
+              >
                 M-
               </Button>
             </div>
