@@ -7,7 +7,7 @@ const Footer = () => {
 
   const socialLinks = [
     { name: "Github", href: "https://github.com/takeisan24", icon: "🐙" },
-    { name: "LinkedIn", href: "#", icon: "💼" },
+    { name: "BioLink", href: "https://bio.link/takeisan204", icon: "💼" },
     { name: "Email", href: "mailto:vutanh507@gmail.com", icon: "📧" },
   ];
 

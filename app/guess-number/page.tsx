@@ -2,41 +2,92 @@
 
 import { useState, useEffect } from "react";
 
+type Difficulty = "easy" | "medium" | "hard" | "expert";
+
+interface DifficultyConfig {
+  name: string;
+  range: number;
+  maxAttempts: number;
+  emoji: string;
+  color: string;
+}
+
+const DIFFICULTY_SETTINGS: Record<Difficulty, DifficultyConfig> = {
+  easy: {
+    name: "Dễ",
+    range: 50,
+    maxAttempts: 7,
+    emoji: "😊",
+    color: "from-green-400 to-emerald-500",
+  },
+  medium: {
+    name: "Trung bình",
+    range: 100,
+    maxAttempts: 8,
+    emoji: "🤔",
+    color: "from-yellow-400 to-orange-500",
+  },
+  hard: {
+    name: "Khó",
+    range: 200,
+    maxAttempts: 9,
+    emoji: "😰",
+    color: "from-orange-400 to-red-500",
+  },
+  expert: {
+    name: "Cực khó",
+    range: 500,
+    maxAttempts: 10,
+    emoji: "🔥",
+    color: "from-red-500 to-purple-600",
+  },
+}
+
 export default function GuessNumber() {
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [targetNumber, setTargetNumber] = useState<number>(0);
   const [guess, setGuess] = useState<string>("");
   const [attempts, setAttempts] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>("");
   const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing");
   const [history, setHistory] = useState<Array<{guess: number, result: string}>>([]);
-  const [maxAttempts] = useState<number>(7);
-
-  // Initialize game
+  // const [maxAttempts] = useState<number>(7);
+  //Khai bao config cua game
+  const currentConfig = DIFFICULTY_SETTINGS[difficulty];
+  // Khởi tạo game
   useEffect(() => {
     resetGame();
-  }, []);
+  }, [difficulty]);
 
   const resetGame = () => {
-    const newNumber = Math.floor(Math.random() * 100) + 1;
+    const newNumber = Math.floor(Math.random() * currentConfig.range) + 1;
     setTargetNumber(newNumber);
     setGuess("");
     setAttempts(0);
-    setFeedback("Tôi đã nghĩ ra một số từ 1 đến 100. Bạn có thể đoán được không?");
+    setFeedback(`Tôi đã nghĩ ra một số từ 1 đến ${currentConfig.range}. Bạn có thể đoán được không?`);
     setGameStatus("playing");
     setHistory([]);
   };
 
+// Hàm chỉnh độ khó cho game
+  const changeDifficulty = (newDifficulty: Difficulty) => {
+    setDifficulty(newDifficulty);
+  };
+
+  // Hàm tạo lần đoán của ngưởi chơi
   const makeGuess = () => {
     const guessNumber = parseInt(guess);
-    
-    if (isNaN(guessNumber) || guessNumber < 1 || guessNumber > 100) {
-      setFeedback("Vui lòng nhập một số từ 1 đến 100!");
+
+    if (isNaN(guessNumber) || guessNumber < 1 || guessNumber > currentConfig.range) {
+      setFeedback(`Vui lòng nhập một số từ 1 đến ${currentConfig.range}!`);
       return;
     }
 
+    //Tạo mới lần thử
     const newAttempts = attempts + 1;
     setAttempts(newAttempts);
 
+    //Render ra kết quả sau khi đoán
     let result = "";
     if (guessNumber === targetNumber) {
       result = "🎉 Chính xác!";
@@ -50,10 +101,10 @@ export default function GuessNumber() {
       setFeedback(`📉 Số ${guessNumber} quá cao. Thử số nhỏ hơn!`);
     }
 
-    // Add to history
+    // Thêm vào lịch sử đoán số
     setHistory(prev => [...prev, { guess: guessNumber, result }]);
 
-    if (newAttempts >= maxAttempts && guessNumber !== targetNumber) {
+    if (newAttempts >= currentConfig.maxAttempts && guessNumber !== targetNumber) {
       setFeedback(`😔 Hết lượt! Số tôi nghĩ là ${targetNumber}. Chơi lại nhé!`);
       setGameStatus("lost");
     }
@@ -61,6 +112,7 @@ export default function GuessNumber() {
     setGuess("");
   };
 
+  //Handle event nhấn nút Enter để submit kết quả
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && gameStatus === "playing") {
       makeGuess();
@@ -100,10 +152,53 @@ export default function GuessNumber() {
             🎯 Game Đoán Số
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Thử thách trí tuệ của bạn! Tôi đã nghĩ ra một số từ 1 đến 100. Bạn có thể đoán được trong {maxAttempts} lần thử?
+            Thử thách trí tuệ của bạn! Tôi đã nghĩ ra một số từ 1 đến {currentConfig.range}. Bạn có thể đoán được trong {currentConfig.maxAttempts} lần thử?
           </p>
         </div>
 
+        {/* Difficulty Selector */}
+        <div className="mb-8">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+            <h3 className="text-white text-lg font-semibold mb-4 text-center">Chọn độ khó</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((diff) => {
+                const config = DIFFICULTY_SETTINGS[diff];
+                const isActive = difficulty === diff;
+                return (
+                  <button
+                    key={diff}
+                    onClick={() => changeDifficulty(diff)}
+                    disabled={gameStatus === "playing" && attempts > 0}
+                    className={`
+                      relative p-4 rounded-xl transition-all duration-300 transform
+                      ${isActive 
+                        ? `bg-gradient-to-r ${config.color} text-white scale-105 shadow-2xl` 
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:scale-105'
+                      }
+                      ${gameStatus === "playing" && attempts > 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    `}
+                  >
+                    <div className="text-3xl mb-2">{config.emoji}</div>
+                    <div className="font-bold text-lg">{config.name}</div>
+                    <div className="text-xs opacity-80 mt-1">
+                      1-{config.range} • {config.maxAttempts} lần
+                    </div>
+                    {isActive && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-xs">✓</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+              {gameStatus === "playing" && attempts > 0 && (
+              <p className="text-center text-gray-400 text-sm mt-3">
+                ⚠️ Không thể đổi độ khó khi đang chơi
+              </p>
+            )}
+          </div>
+        </div>
         {/* Game Area */}
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left Side - Game Controls */}
@@ -128,7 +223,7 @@ export default function GuessNumber() {
                         onKeyPress={handleKeyPress}
                         placeholder="Nhập số của bạn..."
                         min="1"
-                        max="100"
+                        max={currentConfig.range}
                         className="bg-white/10 border border-white/20 rounded-full px-6 py-3 text-white text-center text-lg w-48 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-300"
                       />
                     </div>
@@ -164,7 +259,7 @@ export default function GuessNumber() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
-                    {maxAttempts - attempts}
+                    {currentConfig.maxAttempts - attempts}
                   </div>
                   <div className="text-sm text-gray-400">Còn lại</div>
                 </div>
@@ -215,7 +310,7 @@ export default function GuessNumber() {
                 <li>• Bắt đầu với số 50 để chia đôi khoảng tìm kiếm</li>
                 <li>• Sử dụng phương pháp tìm kiếm nhị phân</li>
                 <li>• Ghi nhớ các gợi ý trước đó</li>
-                <li>• Bạn có {maxAttempts} lần thử - hãy sử dụng khôn ngoan!</li>
+                <li>• Bạn có {currentConfig.maxAttempts} lần thử - hãy sử dụng khôn ngoan!</li>
               </ul>
             </div>
           </div>

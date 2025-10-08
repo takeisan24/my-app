@@ -96,7 +96,7 @@ export default function Home() {
                     <div className="w-full h-full rounded-full overflow-hidden bg-slate-800 relative">
                       {/* Avatar Image */}
                       <Image 
-                        src="/images/avatar.jpg" 
+                        src="/images/ava new.jpg" 
                         alt="Yuuri - Frontend Developer" 
                         fill
                         className="object-cover transition-all duration-300 group-hover:scale-110"
